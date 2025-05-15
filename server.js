@@ -53,4 +53,36 @@ const listener = app.listen(process.env.PORT || 3000, function () {
   }
 });
 
+const mongoose = require("mongoose");
+require("dotenv").config();
+
+mongoose.connect(process.env.DB, {
+  useNewUrlParser: true,
+  useUnifiedTopology: true,
+})
+.then(() => console.log("MongoDB connected"))
+.catch(err => console.error("MongoDB connection error:", err));
+
+function listRoutes(app) {
+  console.log('\nRegistered routes:');
+  app._router.stack.forEach(middleware => {
+    if (middleware.route) {
+      // Direct routes
+      const { path, methods } = middleware.route;
+      console.log(`${Object.keys(methods).join(', ').toUpperCase()} ${path}`);
+    } else if (middleware.name === 'router') {
+      // Routes from router (like apiRoutes)
+      middleware.handle.stack.forEach(handler => {
+        const route = handler.route;
+        if (route) {
+          const { path, methods } = route;
+          console.log(`${Object.keys(methods).join(', ').toUpperCase()} /api${path}`);
+        }
+      });
+    }
+  });
+}
+
+listRoutes(app);
+
 module.exports = app; //for unit/functional testing
